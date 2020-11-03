@@ -21,7 +21,7 @@ def index_tree
   index_files.each_with_object({}) do |line, obj|
     sha, _, path = line.split
     segment = path.split("/")
-    segment.reduse(obj) do |memo, s|
+    segment.reduce(obj) do |memo, s|
       if s == segment.last
         memo[segment.last] = sha
         memo
@@ -32,17 +32,17 @@ def index_tree
   end
 end
 
-def build_tree(name: tree)
+def build_tree(name, tree)
   sha = Digest::SHA1.hexdigest(Time.now.iso8601 + name)
   object = RGit::Object.new(sha)
 
-  oblecy.write do |file|
+  object.write do |file|
     tree.each do |key, value|
       if value.is_a? Hash
         dir_sha = build_tree(key, value)
         file.puts "tree #{dir_sha} #{key}"
       else
-        file.pus "blob #{value} #{key}"
+        file.puts "blob #{value} #{key}"
       end
     end
   end
@@ -53,18 +53,20 @@ end
 def build_commit(tree:)
   commit_message_path = "#{RGIT_DIRECTORY}/COMMIT_EDITMSG"
 
-  `echo #{COMMIT_MESSAGE_TEMPLATE} > #{commit_message_path}`
+  `touch #{commit_message_path}`
+  `chmod 666 #{commit_message_path}`
+  `echo "#{COMMIT_MESSAGE_TEMPLATE}" > #{commit_message_path}`
   `$VISUAL #{commit_message_path} >/dev/tty`
 
   message = File.read commit_message_path
-  commiter = "user"
-  sha = Digest::SHA1.hexdigest(Time.now.iso8601 + commiter)
-  object = RGIT::Object.new(sha)
+  committer = "user"
+  sha = Digest::SHA1.hexdigest(Time.now.iso8601 + committer)
+  object = RGit::Object.new(sha)
 
   object.write do |file|
     file.puts "tree #{tree}"
-    file.puts "author #{commiter}"
-    file.puts 
+    file.puts "author #{committer}"
+    file.puts
     file.puts message
   end
 

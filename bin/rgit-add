@@ -32,5 +32,5 @@ File.open(blob_path, "w") do |file|
 end
 
 File.open(INDEX_PARH, "a") do |file|
-  file.puts "#{sha} #{path}"
+  file.puts "#{sha} blob #{path}"
 end
